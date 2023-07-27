@@ -2,12 +2,55 @@ import requests
 from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
-load_dotenv()
 
-import pickle
+load_dotenv()
 
 STORISMA_EMAIL = os.getenv("STORISMA_EMAIL")
 STORISMA_PASSWORD = os.getenv("STORISMA_PASSWORD")
+
+super_attributes_color = {
+    'red': '1',
+    'green': '2',
+    'yellow': '3',
+    'black': '4',
+    'white': '5',
+    'pink': '12',
+    'gray': '13',
+    'beige': '14',
+    'orange': '15',
+    'navy_blue': '16',
+    'purple': '17',
+    'gold': '18',
+    'silver': '19',
+    'multicolor': '20',
+    'other': '22',
+    'blue': '32',
+    'brown': '33',
+}
+
+super_attributes_size = {
+    'xs': '6',
+    's': '7',
+    'm': '8',
+    'l': '9',
+    'xl': '10',
+    'xxl': '11',
+    'universal': '12',
+}
+
+categories = {
+    'Damskie': '4',
+    'Sukienki i kombinezony': '2',
+    'Bluzki i koszule': '9',
+    'Swetry i bluzy': '8',
+    'T-shirty': '10',
+    'Marynarki i kurtki': '7',
+    'Płaszcze': '6',
+    'Spodnie': '11',
+    'Spódnice': '13',
+    'Kimona': '41',
+    'Zestawy': '40'
+}
 
 
 def parse_csrf_token(content):
@@ -42,22 +85,32 @@ class Storisma:
         self.session = requests.Session()
         self.email = email
         self.password = password
+        self.urls = {
+            'products_url': f"{self.base_url}/marketplace/account/catalog/products",
+            'login_url': f"{self.base_url}/customer/login"
+        }
 
     def login(self):
         with self.session as session:
-            response = session.get(f"{self.base_url}/customer/login")
+            response_get = session.get(self.urls.get('login_url'))
 
         form_data = {
-            "_token": parse_csrf_token(response.content),
+            "_token": parse_csrf_token(response_get.content),
             "email": self.email,
             "password": self.password,
-            'zero': parse_zero_token(response.content)
+            'zero': parse_zero_token(response_get.content)
         }
-        print(form_data)
 
+        response_post = self._make_form_post_request(self.urls.get('login_url'), form_data)
+        if "Profil" in response_post.text and response_post.status_code == 200:
+            print("Login successful!")
+
+        return response_post
+
+    def _make_form_post_request(self, url: str, form_data: dict, params: dict = None) -> requests.models.Response:
         try:
             with self.session as session:
-                response = session.post(f"{self.base_url}/customer/login", data=form_data, cookies=session.cookies)
+                response = session.post(url=url, data=form_data, cookies=session.cookies, params=params)
             response.raise_for_status()  # Raise an exception for 4xx and 5xx status codes
             print("Form submitted successfully!")
         except requests.exceptions.RequestException as e:
@@ -68,14 +121,13 @@ class Storisma:
         params = {
             "family": '1',
             "sku": str(product_sku)
-
         }
 
         with self.session as session:
-            response = session.get(f"{self.base_url}/marketplace/account/catalog/products/create", params=params)
-        response.raise_for_status()
+            response_get = session.get(f"{self.urls.get('products_url')}/create", params=params)
+        response_get.raise_for_status()
 
-        csrf_token = parse_csrf_token(response.content)
+        csrf_token = parse_csrf_token(response_get.content)
 
         form_data = {
             "_token": csrf_token,
@@ -87,13 +139,14 @@ class Storisma:
 
         }
 
-        try:
-            with self.session as session:
-                response = session.post(f"{self.base_url}/marketplace/account/catalog/products/create", params=params, data=form_data)
-            response.raise_for_status()  # Raise an exception for 4xx and 5xx status codes
-            print("Form submitted successfully!")
-        except requests.exceptions.RequestException as e:
-            print(f"Error submitting form: {e}")
+        response_post = self._make_form_post_request(f"{self.urls.get('products_url')}/create",
+                                     params=params,
+                                     form_data=form_data)
+
+        if "Edytuj Produkt" in response_post.text and response_post.status_code == 200:
+            print("Product variations created successfully")
+
+        return response
 
     def get_profile_page(self):
         with self.session as session:
@@ -101,13 +154,49 @@ class Storisma:
             print(response.content)
 
 
-
-
-
-
 storisma = Storisma(STORISMA_EMAIL, STORISMA_PASSWORD)
 response = storisma.login()
-print(response.status_code == 200)
-print(response.text)
-#print(storisma.get_profile_page())
-#storisma.create_product_variations("532123")
+print(response.url.split('/')[-1])
+# storisma.create_product_variations("532123")
+
+product_for = {
+    '_token': ...,
+    '_method': 'PUT',
+    'userType': 'vendor',
+    'locale': 'pl',
+    'channel': 'default',
+    'sku': ...,
+    'name': ...,
+    'url_key': ...,
+    'tax_category_id': '1',
+    'new': "1",
+    'visible_individually': '0',
+    'status': ...,
+    'brand': '',
+    # SHIPPING TIME
+    # (44) 1-2 business days
+    # (45) 2-5 business days
+    # (46) 7 business days
+    # (47) over 7 business days
+    'custom_shipping_time_3': "44",  # (44) 1-2 business days
+    'short_description': ...,
+    'description': ...,
+    'meta_title': ...,
+    'meta_keywords': ...,
+    'meta_description': ...,
+    'price': '',
+    'weight': '',
+    # Images
+    # For every image
+    'images[image_5]': '',  # File
+    'categories[]': [],
+    # Variations, for every product variants[ variant + 1 ]
+    'variants[12709][vendor_id]': ...,  # parse input variants[12709][vendor_id]
+    'variants[12709][name]': ...,
+    'variants[12709][color]': ...,
+    'variants[12709][size]': ...,
+    'variants[12709][inventories][1]': ...,
+    'variants[12709][price]': ...,
+    'variants[12709][weight]': ...,
+    'variants[12709][status]': ...,
+}
