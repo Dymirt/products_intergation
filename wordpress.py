@@ -1,13 +1,5 @@
-import os
-from pprint import pprint
-from dotenv import load_dotenv
 import requests
 from requests.auth import HTTPBasicAuth
-
-load_dotenv()
-WP_CONSUMER_KEY = os.getenv("WP_CONSUMER_KEY")
-WP_CONSUMER_SECRET = os.getenv("WP_CONSUMER_SECRET")
-WP_URL = os.getenv("WP_URL")
 
 
 class WordpressAPI:
@@ -21,7 +13,8 @@ class WordpressAPI:
 
         self.products_variable_publish_payload = {
             'status': 'publish',
-            'type': "variable"
+            'type': "variable",
+            'stock_status': 'instock',
         }
 
     def __authenticate_session(self) -> None:
@@ -36,14 +29,21 @@ class WordpressAPI:
         except requests.exceptions.RequestException as e:
             print(f"Error making API call: {e}")
 
-    def get_products_variable_publish(self):
-        return self._make_api_call(self.products_url, params=self.products_variable_publish_payload).json()
+    def get_products(self) -> list:
+        all_products = []
 
-    def get_products_variable_publish_count(self) -> int:
+        for page in range(1, self.get_products_total_pages() + 1):
+            self.products_variable_publish_payload['page'] = page
+            response = self._make_api_call(self.products_url, params=self.products_variable_publish_payload)
+            all_products.extend(response.json())
+
+        return all_products
+
+    def get_products_total_pages(self) -> int:
         response = self._make_api_call(self.products_url, params=self.products_variable_publish_payload)
-        return int(response.headers.get('X-WP-Total'))
+        print(int(response.headers.get('X-WP-Total')))
+        return int(response.headers.get('X-WP-TotalPages'))
 
-
-if __name__ == "__main__":
-    wp = WordpressAPI(WP_URL, WP_CONSUMER_KEY, WP_CONSUMER_SECRET)
-    pprint(wp.get_products_variable_publish()[0])
+    def get_product_variations(self, product_id):
+        response = self._make_api_call(f"{self.products_url}/{product_id}/variations")
+        return response.json()
