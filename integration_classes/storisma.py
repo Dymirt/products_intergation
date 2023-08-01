@@ -117,7 +117,7 @@ class Storisma:
             print(f"Error submitting form: {e}")
         return response
 
-    def create_product_variations(self, product_sku):
+    def create_product_with_variation(self, product_sku):
         params = {
             "family": '1',
             "sku": str(product_sku)
@@ -148,10 +148,56 @@ class Storisma:
 
         return response
 
-    def get_profile_page(self):
-        with self.session as session:
-            response = session.get("https://storisma.pl/customer/account/profile")
-            print(response.content)
+
+
+    def post_wordpress_variable_product(self, product: dict, product_variations: dict):
+        response = self.create_product_variations(product.get('sku'))
+        storisma_product_id = response.url.split('/')[-1]
+
+
+
+        product_form = {
+            '_token': parse_csrf_token(response.content),
+            '_method': 'PUT',
+            'userType': 'vendor',
+            'locale': 'pl',
+            'channel': 'default',
+            'sku': product.get('sku'),
+            'name': product.get('name'),
+            'url_key': product.get('slug'),
+            'tax_category_id': '1',
+            'new': "1",
+            'visible_individually': '0',
+            'status': '1',
+            'brand': '',
+            # SHIPPING TIME
+            # (44) 1-2 business days
+            # (45) 2-5 business days
+            # (46) 7 business days
+            # (47) over 7 business days
+            'custom_shipping_time_3': "44",  # (44) 1-2 business days
+            'short_description': product.get('short_description'),
+            'description': product.get('description'),
+            'meta_title': ...,
+            'meta_keywords': ...,
+            'meta_description': ...,
+            'price': '',
+            'weight': '',
+            # Images
+            # For every image
+            'images[image_5]': '',  # File
+            'categories[]': [],
+
+            # Variations, for every product variants[ variant + 1 ]
+            'variants[12709][vendor_id]': ...,  # parse input variants[12709][vendor_id]
+            'variants[12709][name]': ...,
+            'variants[12709][color]': ...,
+            'variants[12709][size]': ...,
+            'variants[12709][inventories][1]': ...,
+            'variants[12709][price]': ...,
+            'variants[12709][weight]': ...,
+            'variants[12709][status]': ...,
+        }
 
 
 storisma = Storisma(STORISMA_EMAIL, STORISMA_PASSWORD)
