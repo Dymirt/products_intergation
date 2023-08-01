@@ -1,5 +1,15 @@
+from pprint import pprint
+
 import requests
 from requests.auth import HTTPBasicAuth
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+WP_CONSUMER_KEY = os.getenv("WP_CONSUMER_KEY")
+WP_CONSUMER_SECRET = os.getenv("WP_CONSUMER_SECRET")
+WP_URL = os.getenv("WP_URL")
 
 
 class WordpressAPI:
@@ -41,9 +51,14 @@ class WordpressAPI:
 
     def get_products_total_pages(self) -> int:
         response = self._make_api_call(self.products_url, params=self.products_variable_publish_payload)
-        print(int(response.headers.get('X-WP-Total')))
         return int(response.headers.get('X-WP-TotalPages'))
 
     def get_product_variations(self, product_id):
         response = self._make_api_call(f"{self.products_url}/{product_id}/variations")
         return response.json()
+
+
+if __name__ == "__main__":
+    wp = WordpressAPI(WP_URL, WP_CONSUMER_KEY, WP_CONSUMER_SECRET)
+    wp.get_products()[0].get("id")
+    pprint(wp.get_product_variations(wp.get_products()[0].get("id")))
