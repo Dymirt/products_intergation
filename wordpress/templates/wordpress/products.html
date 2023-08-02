@@ -1,0 +1,12 @@
+{% extends "wordpress/base.html" %}
+{% block content %}
+
+{% with products=object_list%}
+<ol>
+    {% for product in products %}
+    <li>{{ product.name }}</li>
+    {% endfor %}
+</ol>
+{% endwith %}
+
+{% endblock %}
