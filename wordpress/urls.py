@@ -1,9 +1,11 @@
 from django.urls import path
-from .views import WordpressProductsListView, sync_wordpress_products
+
+from . import views
 
 app_name = 'products'
 
 urlpatterns = [
-    path("sync/", sync_wordpress_products, name="sync_products"),
-    path('', WordpressProductsListView.as_view(), name="products"),
+    path('category_setup', views.category_setup, name='category_setup'),
+    path("sync/", views.sync_wordpress_products, name="sync_products"),
+    path('', views.WordpressProductsListView.as_view(), name="products"),
 ]

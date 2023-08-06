@@ -57,6 +57,22 @@ class WordpressAPI:
         response = self._make_api_call(f"{self.products_url}/{product_id}/variations")
         return response.json()
 
+    def get_categories(self):
+        response = self._make_api_call(f"{self.products_url}/categories")
+        category_pages = int(response.headers.get('X-WP-TotalPages'))
+
+        all_categories = []
+
+        for page in range(1, category_pages + 1):
+            payload = {
+                'orderby': "id",
+                'page': page,
+            }
+            response = self._make_api_call(f"{self.products_url}/categories", params=payload)
+            all_categories.extend(response.json())
+
+        return all_categories
+
 
 if __name__ == "__main__":
     wp = WordpressAPI(WP_URL, WP_CONSUMER_KEY, WP_CONSUMER_SECRET)

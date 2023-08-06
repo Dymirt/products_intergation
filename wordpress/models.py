@@ -31,5 +31,5 @@ class WordpressProduct(models.Model):
     name = models.CharField(max_length=60)
     short_description = models.TextField()
     description = models.TextField()
-    #categories = models.ManyToManyField(WordpressCategory, related_name='products')
+    categories = models.ManyToManyField(WordpressCategory, related_name='products')
 
