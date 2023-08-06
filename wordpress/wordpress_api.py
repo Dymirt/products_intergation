@@ -57,6 +57,10 @@ class WordpressAPI:
         response = self._make_api_call(f"{self.products_url}/{product_id}/variations")
         return response.json()
 
+    def get_product_variation(self, product_id, variation_id):
+        response = self._make_api_call(f"{self.products_url}/{product_id}/variations/{variation_id}")
+        return response.json()
+
     def get_categories(self):
         response = self._make_api_call(f"{self.products_url}/categories")
         category_pages = int(response.headers.get('X-WP-TotalPages'))
@@ -76,5 +80,4 @@ class WordpressAPI:
 
 if __name__ == "__main__":
     wp = WordpressAPI(WP_URL, WP_CONSUMER_KEY, WP_CONSUMER_SECRET)
-    wp.get_products()[0].get("id")
-    pprint(wp.get_product_variations(wp.get_products()[0].get("id")))
+    pprint(len(wp.get_product_variations(58437)))

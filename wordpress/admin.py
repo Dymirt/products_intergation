@@ -8,6 +8,11 @@ class PersonAdmin(admin.ModelAdmin):
     list_display = ("sku", "name")
 
 
+@admin.register(models.WordpressProductVariation)
+class PersonAdmin(admin.ModelAdmin):
+    list_display = ("sku", "name")
+
+
 @admin.register(models.WordpressProduct)
 class PersonAdmin(admin.ModelAdmin):
     list_display = ("sku", "name", "display_categories")

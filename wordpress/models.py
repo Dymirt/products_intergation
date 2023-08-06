@@ -19,7 +19,7 @@ class WordpressProductVariation(models.Model):
     size = models.CharField(max_length=60)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock_quantity = models.DecimalField(max_digits=3, decimal_places=0)
-    colour = models.CharField(max_length=60)
+    color = models.CharField(max_length=60)
 
 
 class WordpressProduct(models.Model):
