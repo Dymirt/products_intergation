@@ -12,23 +12,22 @@ WP_CONSUMER_SECRET = os.getenv("WP_CONSUMER_SECRET")
 WP_URL = os.getenv("WP_URL")
 
 
-class WordpressAPI:
-    def __init__(self, url, consumer_key, consumer_secret):
-        self.url = url
+class WordpressAuthenticate:
+    def __init__(self, consumer_key, consumer_secret):
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
-        self.session = requests.Session()
-        self.__authenticate_session()
-        self.products_url = f"{self.url}/products"
 
-        self.products_variable_publish_payload = {
-            'status': 'publish',
-            'type': "variable",
-            'stock_status': 'instock',
-        }
+    def authenticate_session(self) -> requests.Session:
+        session = requests.Session()
+        session.auth = HTTPBasicAuth(self.consumer_key, self.consumer_secret)
+        return session
 
-    def __authenticate_session(self) -> None:
-        self.session.auth = HTTPBasicAuth(self.consumer_key, self.consumer_secret)
+
+class WordpressResource:
+    def __init__(self, session: requests.Session):
+        self.session = session
+        self.url = ...
+        self.default_payload = ...
 
     def _make_api_call(self, url: str, params: dict = None) -> requests.models.Response:
         try:
@@ -39,45 +38,104 @@ class WordpressAPI:
         except requests.exceptions.RequestException as e:
             print(f"Error making API call: {e}")
 
-    def get_products(self) -> list:
-        all_products = []
+    def all(self, payload: dict = None) -> list:
+        if payload is None:
+            payload = self.default_payload
 
-        for page in range(1, self.get_products_total_pages() + 1):
-            self.products_variable_publish_payload['page'] = page
-            response = self._make_api_call(self.products_url, params=self.products_variable_publish_payload)
-            all_products.extend(response.json())
+        all_items = []
 
-        return all_products
+        response = self._make_api_call(self.url, params=payload)
+        all_items.extend(response.json())
 
-    def get_products_total_pages(self) -> int:
-        response = self._make_api_call(self.products_url, params=self.products_variable_publish_payload)
-        return int(response.headers.get('X-WP-TotalPages'))
+        total_pages = int(response.headers.get('X-WP-TotalPages'))
+        if total_pages > 1:
+            for page in range(2, total_pages + 1):
+                payload['page'] = str(page)
+                response = self._make_api_call(self.url, params=payload)
+                all_items.extend(response.json())
+        return all_items
 
-    def get_product_variations(self, product_id):
-        response = self._make_api_call(f"{self.products_url}/{product_id}/variations")
-        return response.json()
 
-    def get_product_variation(self, product_id, variation_id):
-        response = self._make_api_call(f"{self.products_url}/{product_id}/variations/{variation_id}")
-        return response.json()
+class WordpressProducts(WordpressResource):
+    def __init__(self, url, session):
+        super().__init__(session)
+        self.url = f"{url}/products"
+        self.default_payload = {
+            'status': 'publish',
+            'type': "variable",
+            'stock_status': 'instock',
+        }
 
-    def get_categories(self):
-        response = self._make_api_call(f"{self.products_url}/categories")
-        category_pages = int(response.headers.get('X-WP-TotalPages'))
+    def get_variations(self, product_id):
+        return WordpressProductVariation(
+            url=self.url,
+            product_id=product_id,
+            session=self.session
+        )
 
-        all_categories = []
 
-        for page in range(1, category_pages + 1):
-            payload = {
-                'orderby': "id",
-                'page': page,
-            }
-            response = self._make_api_call(f"{self.products_url}/categories", params=payload)
-            all_categories.extend(response.json())
+class WordpressCategory(WordpressResource):
+    def __init__(self, url, session):
+        super().__init__(session)
+        self.url = f"{url}/products/categories"
+        self.default_payload = {}
 
-        return all_categories
+
+class WordpressAttributes(WordpressResource):
+    def __init__(self, url, session):
+        super().__init__(session)
+        self.url = f"{url}/products/attributes"
+        self.default_payload = {}
+
+    def terms(self, attribute_id):
+        return WordpressTerms(
+            url=self.url,
+            attribute_id=attribute_id,
+            session=self.session
+        )
+
+
+class WordpressTerms(WordpressResource):
+    def __init__(self, url, attribute_id, session):
+        super().__init__(session)
+        self.url = f"{url}/{attribute_id}/terms"
+        self.default_payload = {}
+
+
+class WordpressProductVariation(WordpressResource):
+    def __init__(self, url, product_id, session):
+        super().__init__(session)
+        self.url = f"{url}/{product_id}/variations"
+        self.default_payload = {}
+
+
+class WordpressAPI:
+    def __init__(self, url, consumer_key, consumer_secret):
+        self.session = WordpressAuthenticate(consumer_key, consumer_secret).authenticate_session()
+        self.products_url = f"{url}/products"
+        self.products = WordpressProducts(url, self.session)
+        self.categories = WordpressCategory(url, self.session)
+        self.attributes = WordpressAttributes(url, self.session)
 
 
 if __name__ == "__main__":
     wp = WordpressAPI(WP_URL, WP_CONSUMER_KEY, WP_CONSUMER_SECRET)
-    pprint(len(wp.get_product_variations(58437)))
+
+    all_products = wp.products.all()
+    print("Products count", len(all_products))
+    print("First product id", all_products[0].get('id'))
+
+    all_categories = wp.categories.all()
+    print("Categories count", len(all_categories))
+    print("First category id", all_categories[0].get('id'))
+
+    all_attributes = wp.attributes.all()
+    print("Attributes count", len(all_attributes))
+    print("First attribute id", all_attributes[0].get('id'))
+
+    all_product_variations = wp.products.get_variations(66596).all()
+    print("Variations count", len(all_product_variations))
+    print("First variation id", all_product_variations[0].get('id'))
+
+
+
