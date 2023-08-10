@@ -4,7 +4,7 @@
 {% with products=object_list%}
 <ol>
     {% for product in products %}
-    <li>{{ product.name }}</li>
+    <li>{{ product.name }} <button type="button" class="btn btn-success btn-sm">Success</button></li>
     {% endfor %}
 </ol>
 {% endwith %}
