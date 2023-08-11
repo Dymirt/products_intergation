@@ -9,6 +9,9 @@ class WordpressCategory(models.Model):
     name = models.CharField(max_length=60)
     sku = models.DecimalField(max_digits=10, decimal_places=0)
 
+    def __str__(self):
+        return f"{self.name}"
+
 
 class WordpressAttribute(models.Model):
     user = models.ForeignKey(
@@ -17,10 +20,16 @@ class WordpressAttribute(models.Model):
     name = models.CharField(max_length=60)
     sku = models.DecimalField(max_digits=10, decimal_places=0)
 
+    def __str__(self):
+        return f"{self.name}"
+
 
 class WordpressTerms(models.Model):
-    option = models.CharField(max_length=60)
+    name = models.CharField(max_length=60)
     attribute = models.ForeignKey(WordpressAttribute, on_delete=models.CASCADE, related_name="terms")
+
+    def __str__(self):
+        return f"{self.name}"
 
 
 class WordpressProduct(models.Model):
@@ -31,3 +40,5 @@ class WordpressProduct(models.Model):
     name = models.CharField(max_length=60)
     categories = models.ManyToManyField(WordpressCategory, related_name='products')
 
+    def __str__(self):
+        return f"{self.name}"

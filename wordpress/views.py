@@ -1,6 +1,5 @@
 from django.shortcuts import reverse
 from .wordpress_api import WordpressAPI
-from storisma.storisma import Storisma
 from dotenv import load_dotenv
 import os
 from . import models
@@ -16,49 +15,8 @@ WP_CONSUMER_SECRET = os.getenv("WP_CONSUMER_SECRET")
 WP_URL = os.getenv("WP_URL")
 WORDPRESS = WordpressAPI(WP_URL, WP_CONSUMER_KEY, WP_CONSUMER_SECRET)
 
-STORISMA_EMAIL = os.getenv("STORISMA_EMAIL")
-STORISMA_PASSWORD = os.getenv("STORISMA_PASSWORD")
-STORISMA = Storisma(STORISMA_EMAIL, STORISMA_PASSWORD)
-response = STORISMA.login()
-
-
 logger = logging.getLogger(__name__)
 
-
-"""def category_setup():
-    try:
-        categories = WORDPRESS.get_categories()
-        with transaction.atomic():
-            for category in categories:
-                parent_category_id = category.get('parent')
-                name_rewrite = category.get('name')
-
-                if parent_category_id:
-                    try:
-                        parent_category = WordpressCategory.objects.get(sku=parent_category_id)
-                        parent_name_rewrite = parent_category.name
-                        name_rewrite = f"{parent_name_rewrite}/{name_rewrite}"
-                    except WordpressCategory.DoesNotExist:
-                        logger.warning(f"Parent category with SKU {parent_category_id} not found.")
-                        categories.append(category)
-                        continue
-
-                WordpressCategory.objects.create(
-                    sku=category.get('id'),
-                    name=name_rewrite
-                )
-
-    except Exception as e:
-        logger.error(f"An error occurred: {e}")
-
-
-def is_size_attribute(attributes_id):
-    return attributes_id.get('id') == 1
-
-
-def is_color_attribute(attributes_id):
-    return attributes_id.get('id') == 4
-"""
 
 def sync_products(request):
     if request.user.is_authenticated:
