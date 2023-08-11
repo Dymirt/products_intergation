@@ -8,49 +8,7 @@ load_dotenv()
 STORISMA_EMAIL = os.getenv("STORISMA_EMAIL")
 STORISMA_PASSWORD = os.getenv("STORISMA_PASSWORD")
 
-super_attributes_color = {
-    'red': '1',
-    'green': '2',
-    'yellow': '3',
-    'black': '4',
-    'white': '5',
-    'pink': '12',
-    'gray': '13',
-    'beige': '14',
-    'orange': '15',
-    'navy_blue': '16',
-    'purple': '17',
-    'gold': '18',
-    'silver': '19',
-    'multicolor': '20',
-    'other': '22',
-    'blue': '32',
-    'brown': '33',
-}
 
-super_attributes_size = {
-    'xs': '6',
-    's': '7',
-    'm': '8',
-    'l': '9',
-    'xl': '10',
-    'xxl': '11',
-    'universal': '12',
-}
-
-categories = {
-    'Damskie': '4',
-    'Sukienki i kombinezony': '2',
-    'Bluzki i koszule': '9',
-    'Swetry i bluzy': '8',
-    'T-shirty': '10',
-    'Marynarki i kurtki': '7',
-    'Płaszcze': '6',
-    'Spodnie': '11',
-    'Spódnice': '13',
-    'Kimona': '41',
-    'Zestawy': '40'
-}
 
 
 def parse_csrf_token(content):
@@ -200,9 +158,9 @@ class Storisma:
         }
 
 
-storisma = Storisma(STORISMA_EMAIL, STORISMA_PASSWORD)
-response = storisma.login()
-print(response.url.split('/')[-1])
+#storisma = Storisma(STORISMA_EMAIL, STORISMA_PASSWORD)
+#response = storisma.login()
+#print(response.url.split('/')[-1])
 # storisma.create_product_variations("532123")
 
 product_for = {
