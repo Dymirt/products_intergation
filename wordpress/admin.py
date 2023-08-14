@@ -1,16 +1,24 @@
 from django.contrib import admin
 from . import models
 from django.utils.safestring import mark_safe
+from django import forms
 
 
 @admin.register(models.WordpressCategory)
 class WordpressCategoryAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_filter = ["user__username"]
+    list_display = ("name", "user", "products_count")
+
+    def products_count(self, obj):
+        return obj.products.count()
+
+    products_count.short_description = "Products"
 
 
 @admin.register(models.WordpressAttribute)
 class WordpressAttributeAdmin(admin.ModelAdmin):
-    list_display = ("name", 'display_options')
+    list_filter = ["user__username"]
+    list_display = ("name", "display_options", "user")
 
     def display_options(self, obj):
         terms = "<br>".join([term.name for term in obj.terms.all()])
@@ -21,15 +29,25 @@ class WordpressAttributeAdmin(admin.ModelAdmin):
 
 @admin.register(models.WordpressTerms)
 class WordpressTermsAdmin(admin.ModelAdmin):
+    list_filter = ["attribute__name"]
     list_display = ("name", "attribute")
 
 
 @admin.register(models.WordpressProduct)
 class WordpressProductAdmin(admin.ModelAdmin):
-    list_display = ("sku", "name", "display_categories")
+    list_filter = ["user__username"]
+    list_display = ("sku", "name", "display_attributes", "display_categories", "user")
 
     def display_categories(self, obj):
         categories = "<br>".join([category.name for category in obj.categories.all()])
         return mark_safe(categories)
 
     display_categories.short_description = "Categories"
+
+    def display_attributes(self, obj):
+        attributes = "<br>".join(
+            [attributes.name for attributes in obj.attributes.all()]
+        )
+        return mark_safe(attributes)
+
+    display_attributes.short_description = "Attributes"

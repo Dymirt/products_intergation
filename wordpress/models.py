@@ -39,6 +39,7 @@ class WordpressProduct(models.Model):
     sku = models.DecimalField(max_digits=10, decimal_places=0)
     name = models.CharField(max_length=60)
     categories = models.ManyToManyField(WordpressCategory, related_name='products')
+    attributes = models.ManyToManyField(WordpressAttribute, related_name='products')
 
     def __str__(self):
         return f"{self.name}"
