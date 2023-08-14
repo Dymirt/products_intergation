@@ -9,8 +9,6 @@ STORISMA_EMAIL = os.getenv("STORISMA_EMAIL")
 STORISMA_PASSWORD = os.getenv("STORISMA_PASSWORD")
 
 
-
-
 def parse_csrf_token(content):
     try:
         # Parse the HTML content using BeautifulSoup
@@ -63,8 +61,6 @@ class Storisma:
         if "Profil" in response_post.text and response_post.status_code == 200:
             print("Login successful!")
 
-        return response_post
-
     def _make_form_post_request(self, url: str, form_data: dict, params: dict = None) -> requests.models.Response:
         try:
             with self.session as session:
@@ -104,7 +100,7 @@ class Storisma:
         if "Edytuj Produkt" in response_post.text and response_post.status_code == 200:
             print("Product variations created successfully")
 
-        return response
+        return response_post
 
 
 

@@ -5,5 +5,5 @@ from . import views
 app_name = 'storisma'
 
 urlpatterns = [
-    path("", views.storisma, name="sync_products"),
+    path("settings", views.settings, name="settings"),
 ]

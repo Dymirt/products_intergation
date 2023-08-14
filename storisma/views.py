@@ -17,5 +17,5 @@ STORISMA = storisma.Storisma(STORISMA_EMAIL, STORISMA_PASSWORD)
 #response = STORISMA.login()
 
 
-def storisma(request):
+def settings(request):
     return HttpResponseRedirect(reverse("products:products"))

@@ -19,13 +19,14 @@ class StorismaAttribute(models.Model):
 class StorismaTerm(models.Model):
     term_id = models.DecimalField(max_digits=10, decimal_places=0)
     name = models.CharField(max_length=60)
-    attribute = models.ForeignKey(StorismaAttribute, on_delete=models.CASCADE, related_name="terms")
+    attribute = models.ForeignKey('StorismaAttribute', on_delete=models.CASCADE, related_name="terms")
     wordpress_term = models.ForeignKey(
-        wordpress.WordpressTerms,
+        'wordpress.WordpressTerms',
         on_delete=models.SET_NULL,
         related_name='storisma_terms',
         null=True
     )
+
     def __str__(self):
         return f"{self.name}"
 
@@ -33,15 +34,22 @@ class StorismaTerm(models.Model):
 class StorismaCategory(models.Model):
     category_id = models.DecimalField(max_digits=10, decimal_places=0)
     name = models.CharField(max_length=60)
-    wordpress_category = models.ForeignKey(
+    wordpress_category = models.ManyToManyField(
         wordpress.WordpressCategory,
-        on_delete=models.SET_NULL,
         related_name='storisma_categories',
-        null=True
     )
 
     def __str__(self):
         return f"{self.name}"
+
+
+class StorismaProduct(models.Model):
+    product_id = models.DecimalField(max_digits=10, decimal_places=0)
+
+
+class StorismaProductVariation(models.Model):
+    variation_id = models.DecimalField(max_digits=10, decimal_places=0)
+    product = models.ForeignKey(StorismaProduct, on_delete=models.CASCADE, related_name="variations")
 
 
 # Populate YourModel using data from the data.py file
