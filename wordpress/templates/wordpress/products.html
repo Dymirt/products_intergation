@@ -2,11 +2,35 @@
 {% block content %}
 
 {% with products=object_list%}
-<ol>
+<style>
+table {
+  counter-reset: rowNumber;
+}
+
+table tr::before {
+  display: table-cell;
+  counter-increment: rowNumber;
+  content: counter(rowNumber) ".";
+  padding-right: 0.3em;
+  text-align: right;
+}
+</style>
+<table>
+    <thead>
+    <th>Product name</th>
+    <th>Storisma product id</th>
+    </thead>
     {% for product in products %}
-    <li>{{ product.name }} <button type="button" class="btn btn-success btn-sm">Success</button></li>
+    <tr>
+        <td>{{ product.name }}</td>
+        {% if product.storisma_product %}
+        <td>{{ product.storisma_product.product_id }}</td>
+        {% else %}
+        <td><a href="{% url 'storisma:create-product' product.product_id %}">Add to storisma</a></td>
+        {% endif %}
+    </tr>
     {% endfor %}
-</ol>
+</table>
 {% endwith %}
 
 {% endblock %}

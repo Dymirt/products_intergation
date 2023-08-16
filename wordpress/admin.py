@@ -36,18 +36,9 @@ class WordpressTermsAdmin(admin.ModelAdmin):
 @admin.register(models.WordpressProduct)
 class WordpressProductAdmin(admin.ModelAdmin):
     list_filter = ["user__username"]
-    list_display = ("sku", "name", "display_attributes", "display_categories", "user")
+    list_display = ("product_id", "name", "display_categories", "user")
 
     def display_categories(self, obj):
         categories = "<br>".join([category.name for category in obj.categories.all()])
         return mark_safe(categories)
-
     display_categories.short_description = "Categories"
-
-    def display_attributes(self, obj):
-        attributes = "<br>".join(
-            [attributes.name for attributes in obj.attributes.all()]
-        )
-        return mark_safe(attributes)
-
-    display_attributes.short_description = "Attributes"

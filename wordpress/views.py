@@ -24,14 +24,14 @@ def sync_products(request):
         for product in products:
             product_obj = models.WordpressProduct.objects.create(
                 user=request.user,
-                sku=product.get('id'),
-                name=product.get('name'),
+                product_id=product.get('id'),
+                json_data=product
             )
-            logger.warning(f"Product {product_obj.sku} created.")
+            logger.warning(f"Product {product_obj.product_id} created.")
 
             # Setting category ManyToManyField
             categories = [category.get("id") for category in product.get('categories')]
-            product_obj.categories.set(models.WordpressCategory.objects.filter(sku__in=categories))
+            product_obj.categories.set(models.WordpressCategory.objects.filter(category_id__in=categories))
 
     return HttpResponseRedirect(reverse("products:products"))
 
@@ -46,7 +46,7 @@ def sync_categories(request):
 
             if parent_category_id:
                 try:
-                    parent_category = models.WordpressCategory.objects.get(sku=parent_category_id)
+                    parent_category = models.WordpressCategory.objects.get(category_id=parent_category_id)
                     parent_name_rewrite = parent_category.name
                     name_rewrite = f"{parent_name_rewrite}/{name_rewrite}"
                 except models.WordpressCategory.DoesNotExist:
@@ -56,7 +56,7 @@ def sync_categories(request):
 
             models.WordpressCategory.objects.create(
                 user=request.user,
-                sku=category.get('id'),
+                category_id=category.get('id'),
                 name=name_rewrite
             )
 
@@ -69,7 +69,7 @@ def sync_attributes(request):
         attribute = models.WordpressAttribute.objects.create(
             user=request.user,
             name=attribute.get('name'),
-            sku=attribute.get('id'),
+            attribute_id=attribute.get('id'),
         )
         sync_attribute_terms(attribute)
 
