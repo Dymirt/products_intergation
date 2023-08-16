@@ -45,6 +45,7 @@ class StorismaCategory(models.Model):
 
 class StorismaProduct(models.Model):
     product_id = models.DecimalField(max_digits=10, decimal_places=0)
+    wordpress_product = models.OneToOneField(wordpress.WordpressProduct, on_delete=models.CASCADE, related_name='storisma_product')
 
 
 class StorismaProductVariation(models.Model):

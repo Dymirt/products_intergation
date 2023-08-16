@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -19,6 +21,19 @@ def parse_csrf_token(content):
         return csrf_token
     except requests.exceptions.RequestException as e:
         print(f"Error fetching CSRF token: {e}")
+        return None
+
+
+def parse_product_variations(content):
+    try:
+        # Parse the HTML content using BeautifulSoup
+        soup = BeautifulSoup(content, 'html.parser')
+        variations = soup.find_all('input', {'type': 'hidden'})
+        print(variations)
+
+        return variations
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching variants: {e}")
         return None
 
 
@@ -71,7 +86,7 @@ class Storisma:
             print(f"Error submitting form: {e}")
         return response
 
-    def create_product_with_variation(self, product_sku):
+    def create_product_with_variation(self, product_sku, super_attributes: dict):
         params = {
             "family": '1',
             "sku": str(product_sku)
@@ -88,39 +103,50 @@ class Storisma:
             "type": "configurable",
             "attribute_family_id": "1",
             "sku": product_sku,
-            "super_attributes[color][]": ["22", "32", "33"],  # Multiple values for super_attributes[color][]
-            "super_attributes[size][]": ["54", "55", "56"],  # Multiple values for super_attributes[size][]
-
         }
+        form_data.update(super_attributes)
 
         response_post = self._make_form_post_request(f"{self.urls.get('products_url')}/create",
                                      params=params,
                                      form_data=form_data)
 
-        if "Edytuj Produkt" in response_post.text and response_post.status_code == 200:
-            print("Product variations created successfully")
-
         return response_post
 
+    def populate_product_data(self, storisma_product, storisma_super_attributes: dict):
 
+        with self.session as session:
+            response_get = session.get(
+                url=f"{self.base_url}/marketplace/account/catalog/products/edit/{storisma_product.product_id}"
+            )
 
-    def post_wordpress_variable_product(self, product: dict, product_variations: dict):
-        response = self.create_product_variations(product.get('sku'))
-        storisma_product_id = response.url.split('/')[-1]
+        response_get.raise_for_status()
+        print(response_get.content)
 
+        csrf_token = parse_csrf_token(response_get.content)
 
+        variations_count = 1
+        for attribute in storisma_super_attributes.values():
+            variations_count *= len(attribute)
+
+        print(variations_count)
+
+        storisma_categories = []
+        #for category in storisma_product.wordpress_product.categories.all():
+        #    storisma_categories.append(category.storisma_categories.first().category_id)
 
         product_form = {
-            '_token': parse_csrf_token(response.content),
+            # Hidden inputs
+            '_token': csrf_token,
             '_method': 'PUT',
             'userType': 'vendor',
             'locale': 'pl',
             'channel': 'default',
-            'sku': product.get('sku'),
-            'name': product.get('name'),
-            'url_key': product.get('slug'),
-            'tax_category_id': '1',
             'new': "1",
+
+            'sku': storisma_product.product_id,
+            'name': storisma_product.wordpress_product.name,
+            'url_key': storisma_product.wordpress_product.slug,
+            'tax_category_id': '1',
             'visible_individually': '0',
             'status': '1',
             'brand': '',
@@ -130,20 +156,20 @@ class Storisma:
             # (46) 7 business days
             # (47) over 7 business days
             'custom_shipping_time_3': "44",  # (44) 1-2 business days
-            'short_description': product.get('short_description'),
-            'description': product.get('description'),
-            'meta_title': ...,
-            'meta_keywords': ...,
-            'meta_description': ...,
+            'short_description': storisma_product.wordpress_product.short_description,
+            'description': storisma_product.wordpress_product.short_description,
+            'meta_title': '',
+            'meta_keywords': '',
+            'meta_description': '',
             'price': '',
             'weight': '',
             # Images
             # For every image
-            'images[image_5]': '',  # File
-            'categories[]': [],
+            'images[image_1]': '',  # File
+            'categories[]': storisma_categories,
 
             # Variations, for every product variants[ variant + 1 ]
-            'variants[12709][vendor_id]': ...,  # parse input variants[12709][vendor_id]
+            'variants[12709][vendor_id]': '88',  # parse input variants[12709][vendor_id]
             'variants[12709][name]': ...,
             'variants[12709][color]': ...,
             'variants[12709][size]': ...,
@@ -152,6 +178,8 @@ class Storisma:
             'variants[12709][weight]': ...,
             'variants[12709][status]': ...,
         }
+
+        pprint(product_form)
 
 
 #storisma = Storisma(STORISMA_EMAIL, STORISMA_PASSWORD)

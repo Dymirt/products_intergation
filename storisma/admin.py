@@ -48,3 +48,18 @@ class StorismaTermAdmin(admin.ModelAdmin):
                     "wordpress_term"
                 ].queryset = wordpress.WordpressTerms.objects.none()
         return form
+
+
+@admin.register(models.StorismaProduct)
+class StorismaProductAdmin(admin.ModelAdmin):
+    list_display = ("product_id", "wordpress_product")
+
+
+@admin.register(models.StorismaProductVariation)
+class StorismaProductVariationAdmin(admin.ModelAdmin):
+    list_display = ("variation_id", "product__wordpress_product")
+
+    def product__wordpress_product(self, obj):
+        return obj.product.wordpress_product
+
+    product__wordpress_product.short_description = "WordPress Product"
