@@ -114,7 +114,7 @@ class WordpressProductVariations(WordpressResource):
     def __init__(self, url, session):
         super().__init__(session)
         self.url = f"{url}/variations"
-        self.default_payload = {}
+        self.default_payload = {'status': 'publish'}
 
 
 class WordpressCategory(WordpressResource):

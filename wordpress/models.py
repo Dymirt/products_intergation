@@ -76,3 +76,22 @@ class WordpressProduct(models.Model):
     @property
     def variations_in_stock(self):
         return list(filter(lambda variation: variation.get('stock_quantity') > 0, self.variations))
+
+
+def group_variations_attributes_by_id(variations: list) -> list:
+    attribute_groups = {}  # Use this dictionary to keep track of groups by attribute_id
+
+    for variation in variations:
+        for attribute in variation.get('attributes'):
+            attribute_id = attribute.get("id")
+            option = attribute.get("option")
+
+            if attribute_id in attribute_groups:
+                attribute_groups[attribute_id]["options"].add(option)
+            else:
+                attribute_groups[attribute_id] = {
+                    "attribute_id": attribute_id,
+                    "options": {option},
+                }
+
+    return list(attribute_groups.values())
