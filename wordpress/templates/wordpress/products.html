@@ -25,6 +25,7 @@ table tr::before {
         <td>{{ product.name }}</td>
         {% if product.storisma_product %}
         <td>{{ product.storisma_product.product_id }}</td>
+        <td><a href="{% url 'storisma:populate-product' product.storisma_product.product_id %}">Populate data</a></td>
         {% else %}
         <td><a href="{% url 'storisma:create-product' product.product_id %}">Add to storisma</a></td>
         {% endif %}

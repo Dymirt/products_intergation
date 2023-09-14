@@ -43,7 +43,7 @@ class WordpressProduct(models.Model):
     product_id = models.DecimalField(max_digits=10, decimal_places=0)
     categories = models.ManyToManyField(WordpressCategory, related_name='products')
     json_data = models.JSONField()
-    variations_json_data = models.JSONField()
+    variations_json_data = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -72,10 +72,6 @@ class WordpressProduct(models.Model):
             self.variations_json_data = wp.products.get(self.product_id).variations.all()
             self.save()
         return self.variations
-
-    @property
-    def variations_in_stock(self):
-        return list(filter(lambda variation: variation.get('stock_quantity') > 0, self.variations))
 
 
 def group_variations_attributes_by_id(variations: list) -> list:

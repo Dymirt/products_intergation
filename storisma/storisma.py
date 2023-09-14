@@ -112,38 +112,29 @@ class Storisma:
 
         return response_post
 
-    def populate_product_data(self, storisma_product, storisma_super_attributes: dict):
+    def populate_product_data(self, storisma_product):
 
         with self.session as session:
             response_get = session.get(
                 url=f"{self.base_url}/marketplace/account/catalog/products/edit/{storisma_product.product_id}"
             )
-
         response_get.raise_for_status()
-        print(response_get.content)
-
-        csrf_token = parse_csrf_token(response_get.content)
-
-        variations_count = 1
-        for attribute in storisma_super_attributes.values():
-            variations_count *= len(attribute)
-
-        print(variations_count)
 
         storisma_categories = []
-        #for category in storisma_product.wordpress_product.categories.all():
-        #    storisma_categories.append(category.storisma_categories.first().category_id)
+        for wordpress_category in storisma_product.wordpress_product.categories.all():
+            for storisma_category in wordpress_category.storisma_categories.all():
+                storisma_categories.append(str(storisma_category.category_id))
 
         product_form = {
             # Hidden inputs
-            '_token': csrf_token,
+            '_token': parse_csrf_token(response_get.content),
             '_method': 'PUT',
             'userType': 'vendor',
             'locale': 'pl',
             'channel': 'default',
             'new': "1",
 
-            'sku': storisma_product.product_id,
+            'sku': str(storisma_product.product_id),
             'name': storisma_product.wordpress_product.name,
             'url_key': storisma_product.wordpress_product.slug,
             'tax_category_id': '1',
@@ -156,28 +147,30 @@ class Storisma:
             # (46) 7 business days
             # (47) over 7 business days
             'custom_shipping_time_3': "44",  # (44) 1-2 business days
-            'short_description': storisma_product.wordpress_product.short_description,
-            'description': storisma_product.wordpress_product.short_description,
+            'short_description': storisma_product.wordpress_product.short_description, #TODO clean HTML
+            'description': storisma_product.wordpress_product.short_description, #TODO clean HTML
             'meta_title': '',
             'meta_keywords': '',
             'meta_description': '',
             'price': '',
             'weight': '',
+
             # Images
             # For every image
             'images[image_1]': '',  # File
             'categories[]': storisma_categories,
-
-            # Variations, for every product variants[ variant + 1 ]
-            'variants[12709][vendor_id]': '88',  # parse input variants[12709][vendor_id]
-            'variants[12709][name]': ...,
-            'variants[12709][color]': ...,
-            'variants[12709][size]': ...,
-            'variants[12709][inventories][1]': ...,
-            'variants[12709][price]': ...,
-            'variants[12709][weight]': ...,
-            'variants[12709][status]': ...,
         }
+
+        for product_variation in storisma_product.variations.all():
+            product_form[f'variants[{product_variation.variation_id}][sku]'] = product_variation.variation_id
+            product_form[f'variants[{product_variation.variation_id}][vendor_id]'] = '88'
+            #TODO product_form[f'variants[{product_variation.variation_id}][name]'] = "Name"
+            #TODO product_form[f'variants[{product_variation.variation_id}][color]'] = "color"
+            #TODO product_form[f'variants[{product_variation.variation_id}][size]'] = "size"
+            product_form[f'variants[{product_variation.variation_id}][inventories][1]'] = str(product_variation.stock_quantity)
+            product_form[f'variants[{product_variation.variation_id}][price]'] = str(product_variation.price)
+            product_form[f'variants[{product_variation.variation_id}][weight]'] = "0"
+            product_form[f'variants[{product_variation.variation_id}][status]'] = "1"
 
         pprint(product_form)
 

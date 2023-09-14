@@ -88,6 +88,7 @@ class WordpressProducts(WordpressResource):
             'status': 'publish',
             'type': "variable",
             'stock_status': 'instock',
+            'catalog_visibility': 'catalog'
         }
 
     def get(self, product_id):
@@ -114,7 +115,10 @@ class WordpressProductVariations(WordpressResource):
     def __init__(self, url, session):
         super().__init__(session)
         self.url = f"{url}/variations"
-        self.default_payload = {'status': 'publish'}
+        self.default_payload = {
+            'status': 'publish',
+            "stock_status": 'instock' #TODO delete filter from models
+        }
 
 
 class WordpressCategory(WordpressResource):

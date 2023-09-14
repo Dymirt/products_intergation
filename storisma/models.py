@@ -49,6 +49,8 @@ class StorismaProduct(models.Model):
 
 
 class StorismaProductVariation(models.Model):
+    price = models.DecimalField(max_digits=10, decimal_places=0)
+    stock_quantity = models.DecimalField(max_digits=10, decimal_places=0)
     variation_id = models.DecimalField(max_digits=10, decimal_places=0)
     product = models.ForeignKey(StorismaProduct, on_delete=models.CASCADE, related_name="variations")
 

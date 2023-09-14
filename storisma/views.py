@@ -25,7 +25,7 @@ def settings(request):
 
 def create_product_with_variations(request, wordpress_product_id):
     # Get product variations using Wordpress Api
-    wordpress_product_variations = wp.WordpressProduct.objects.get(product_id=wordpress_product_id).variations_in_stock
+    wordpress_product_variations = wp.WordpressProduct.objects.get(product_id=wordpress_product_id).variations
 
     # Group all variations attibutes and conwert them to storisma creation params dict:
     grouped_variations_attributes = wp.group_variations_attributes_by_id(
@@ -51,10 +51,16 @@ def create_product_with_variations(request, wordpress_product_id):
 
     # Adding variations to
     variation_id = int(storisma_product_id) + 1
-    for _ in wordpress_product_variations:
+    for product_variation in wordpress_product_variations:
         models.StorismaProductVariation.objects.create(
             variation_id=variation_id,
             product=storisma_product,
+            #name
+            #color=models.
+            #size=product_variation.get('attributes').get()
+            stock_quantity=product_variation.get('stock_quantity'),
+            price=product_variation.get('price'),
+            #weight
         )
         variation_id += 1
 
@@ -62,7 +68,8 @@ def create_product_with_variations(request, wordpress_product_id):
 
 
 def pupulate_product_data(request, storisma_product_id):
-    #TODO
+    storisma_product = models.StorismaProduct.objects.get(product_id=storisma_product_id)
+    STORISMA.populate_product_data(storisma_product)
     return HttpResponseRedirect(reverse("products:products"))
 
 
