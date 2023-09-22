@@ -22,16 +22,17 @@ def sync_products(request):
     if request.user.is_authenticated:
         products = WORDPRESS.products.all()
         for product in products:
-            product_obj = models.WordpressProduct.objects.create(
-                user=request.user,
-                product_id=product.get('id'),
-                json_data=product
-            )
-            logger.warning(f"Product {product_obj.product_id} created.")
+            if product.get('catalog_visibility') == "visible":
+                product_obj = models.WordpressProduct.objects.create(
+                    user=request.user,
+                    product_id=product.get('id'),
+                    json_data=product
+                )
+                logger.warning(f"Product {product_obj.product_id} created.")
 
-            # Setting category ManyToManyField
-            categories = [category.get("id") for category in product.get('categories')]
-            product_obj.categories.set(models.WordpressCategory.objects.filter(category_id__in=categories))
+                # Setting category ManyToManyField
+                categories = [category.get("id") for category in product.get('categories')]
+                product_obj.categories.set(models.WordpressCategory.objects.filter(category_id__in=categories))
 
     return HttpResponseRedirect(reverse("products:products"))
 

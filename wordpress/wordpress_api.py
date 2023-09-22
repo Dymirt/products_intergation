@@ -88,7 +88,6 @@ class WordpressProducts(WordpressResource):
             'status': 'publish',
             'type': "variable",
             'stock_status': 'instock',
-            'catalog_visibility': 'catalog'
         }
 
     def get(self, product_id):

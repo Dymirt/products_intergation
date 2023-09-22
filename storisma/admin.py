@@ -55,9 +55,14 @@ class StorismaProductAdmin(admin.ModelAdmin):
     list_display = ("product_id", "wordpress_product")
 
 
+@admin.register(models.StorismaProductVariationAttribute)
+class StorismaProductVariationAttributeAdmin(admin.ModelAdmin):
+    list_display = ("variation", "attribute", "term")
+
+
 @admin.register(models.StorismaProductVariation)
 class StorismaProductVariationAdmin(admin.ModelAdmin):
-    list_display = ("variation_id", "product__wordpress_product", 'price', 'stock_quantity')
+    list_display = ("variation_id", "product__wordpress_product", 'price', 'stock_quantity', 'attributes')
 
     def product__wordpress_product(self, obj):
         return obj.product.wordpress_product

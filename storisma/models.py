@@ -55,6 +55,12 @@ class StorismaProductVariation(models.Model):
     product = models.ForeignKey(StorismaProduct, on_delete=models.CASCADE, related_name="variations")
 
 
+class StorismaProductVariationAttribute(models.Model):
+    attribute = models.ForeignKey(StorismaAttribute, on_delete=models.CASCADE, related_name="variations")
+    term = models.ForeignKey(StorismaTerm, on_delete=models.CASCADE, related_name='variations')
+    variation = models.ForeignKey(StorismaProductVariation, on_delete=models.CASCADE, related_name='attributes')
+
+
 # Populate YourModel using data from the data.py file
 def populate_category_model_from_data():
     for category in data.categories:
