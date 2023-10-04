@@ -7,10 +7,14 @@ from django import forms
 @admin.register(models.WordpressCategory)
 class WordpressCategoryAdmin(admin.ModelAdmin):
     list_filter = ["user__username"]
-    list_display = ("name", "user", "products_count")
+    list_display = ("name", "user", "products_count", 'related_categories')
 
     def products_count(self, obj):
         return obj.products.count()
+
+    def related_categories(self, obj):
+        categories = "<br>".join([category.name for category in obj.storisma_categories.all()])
+        return mark_safe(categories)
 
     products_count.short_description = "Products"
 

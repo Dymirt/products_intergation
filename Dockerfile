@@ -9,6 +9,9 @@ ENV PYTHONUNBUFFERED 1
 # Set work directory
 WORKDIR /code
 
+# Install Pillow using pip
+RUN pip install Pillow
+
 # Install dependencies
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt

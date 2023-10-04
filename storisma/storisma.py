@@ -1,9 +1,19 @@
+import base64
+import http
+import mimetypes
 from pprint import pprint
+import http.client
+import http.cookiejar
+import urllib.parse
+import requests
+from PIL import Image
 
 import requests
 from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
+import io
+import json
 
 import secrets
 
@@ -52,6 +62,31 @@ def parse_zero_token(content):
         return None
 
 
+def resize_immage(file_path: str) -> None:
+    max_dimension = 1900
+    target_file_size_kb = 1500
+    quality = 100
+    with Image.open(file_path) as im:
+        print(im.format, im.size, im.mode, os.stat(file_path).st_size / (1024 * 1024))
+        w, h = im.size
+        # Check if either dimension is larger than max_dimension
+        if w > max_dimension or h > max_dimension:
+            # Calculate the scaling factor
+            scale_factor = max_dimension / max(w, h)
+            new_width = int(w * scale_factor)
+            new_height = int(h * scale_factor)
+            # Resize the image
+            im = im.resize((new_width, new_height))
+
+        im.save(file_path, format="JPEG", quality=quality, optimize=True)
+        # Check if the file size is below the target size
+        while os.stat(file_path).st_size / 1024 > target_file_size_kb:
+            quality -= 1
+            im.save(file_path, format="JPEG", quality=quality, optimize=True)
+
+        print(im.format, im.size, im.mode, os.stat(file_path).st_size / (1024 * 1024), quality)
+
+
 class Storisma:
     def __init__(self, email, password):
         self.base_url = "https://storisma.pl"
@@ -62,6 +97,7 @@ class Storisma:
             'products_url': f"{self.base_url}/marketplace/account/catalog/products",
             'login_url': f"{self.base_url}/customer/login"
         }
+        self.login()
 
     def login(self):
         with self.session as session:
@@ -155,10 +191,25 @@ class Storisma:
             'meta_title': '',
             'meta_keywords': '',
             'meta_description': '',
-            'images[image_1]': None,  # Handle file upload separately
             'categories[]': storisma_categories,
-
         }
+
+        # Send a GET request to download the image
+        i = 1
+        files = dict()
+        for image in storisma_product.wordpress_product.images:
+            image_response = requests.get(image)
+            if image_response.status_code == 200:
+                # Prepare the image file for upload
+                image_filename = image.split('/')[-1]
+
+                # Open the local file in binary write mode and write the image data
+                with open(f"./wp-images/{image_filename}", 'wb') as file:
+                    file.write(image_response.content)
+
+                resize_immage(f"./wp-images/{image_filename}")
+                files[f'images[image_{i}]'] = (image_filename, open(f"./wp-images/{image_filename}", 'rb'), 'image/jpeg')
+                i += 1
 
         for product_variation in storisma_product.variations.all():
             payload[f'variants[{product_variation.variation_id}][sku]'] = str(product_variation.variation_id)
@@ -176,10 +227,11 @@ class Storisma:
 
         try:
             with self.session as session:
-                response = session.put(
+                response = session.post(
                     url=f"{self.base_url}/marketplace/account/catalog/products/edit/{storisma_product.product_id}",
                     data=payload,
                     cookies=session.cookies,
+                    files=files
                 )
 
             response.raise_for_status()  # Raise an exception for 4xx and 5xx status codes
@@ -195,4 +247,3 @@ class Storisma:
         else:
             print("Request failed")
             #print(response.text)  # Print the response content for debugging
-        return response

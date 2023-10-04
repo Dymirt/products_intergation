@@ -53,6 +53,11 @@ class WordpressProduct(models.Model):
         return self.json_data.get('slug')
 
     @property
+    def images(self):
+        for image in self.json_data.get('images'):
+            yield image.get('src')
+
+    @property
     def short_description(self):
         return self.json_data.get('short_description')
 
@@ -71,7 +76,8 @@ class WordpressProduct(models.Model):
         else:
             self.variations_json_data = wp.products.get(self.product_id).variations.all()
             self.save()
-        return self.variations
+        return self.variations_json_data if self.variations_json_data else []
+
 
 
 def group_variations_attributes_by_id(variations: list) -> list:

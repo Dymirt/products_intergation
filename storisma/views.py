@@ -18,7 +18,7 @@ load_dotenv()
 STORISMA_EMAIL = os.getenv("STORISMA_EMAIL")
 STORISMA_PASSWORD = os.getenv("STORISMA_PASSWORD")
 STORISMA = storisma.Storisma(STORISMA_EMAIL, STORISMA_PASSWORD)
-STORISMA.login()
+#STORISMA.login()
 
 
 def settings(request):
@@ -28,6 +28,8 @@ def settings(request):
 def create_product_with_variations(request, wordpress_product_id):
     # Get product variations using Wordpress Api
     wordpress_product_variations = wp.WordpressProduct.objects.get(product_id=wordpress_product_id).variations
+    if not wordpress_product_variations:
+        return HttpResponseRedirect(reverse("products:products"))
 
     # Group all variations attibutes and conwert them to storisma creation params dict:
     grouped_variations_attributes = wp.group_variations_attributes_by_id(
@@ -54,23 +56,24 @@ def create_product_with_variations(request, wordpress_product_id):
     # Adding variations to
     variation_id = int(storisma_product_id) + 1
     for product_variation in wordpress_product_variations:
-        variation = models.StorismaProductVariation.objects.create(
-            variation_id=variation_id,
-            product=storisma_product,
-            stock_quantity=product_variation.get('stock_quantity'),
-            price=product_variation.get('price'),
-        )
-
-        for attribute in product_variation.get('attributes'):
-            storisma_attribute = models.StorismaAttribute.objects.get(wordpress_attribute__attribute_id=attribute.get('id'))
-            term = models.StorismaTerm.objects.get(attribute=storisma_attribute, wordpress_term__name=attribute.get('option'))
-            models.StorismaProductVariationAttribute.objects.create(
-                variation=variation,
-                attribute=storisma_attribute,
-                term=term
+        if product_variation.get('stock_quantity') > 0:
+            variation = models.StorismaProductVariation.objects.create(
+                variation_id=variation_id,
+                product=storisma_product,
+                stock_quantity=product_variation.get('stock_quantity'),
+                price=product_variation.get('price'),
             )
-        variation_id += 1
 
+            for attribute in product_variation.get('attributes'):
+                storisma_attribute = models.StorismaAttribute.objects.get(wordpress_attribute__attribute_id=attribute.get('id'))
+                term = models.StorismaTerm.objects.get(attribute=storisma_attribute, wordpress_term__name=attribute.get('option'))
+                models.StorismaProductVariationAttribute.objects.create(
+                    variation=variation,
+                    attribute=storisma_attribute,
+                    term=term
+                )
+            variation_id += 1
+    STORISMA.populate_product_data(storisma_product)
     return HttpResponseRedirect(reverse("products:products"))
 
 
