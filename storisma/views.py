@@ -18,7 +18,6 @@ load_dotenv()
 STORISMA_EMAIL = os.getenv("STORISMA_EMAIL")
 STORISMA_PASSWORD = os.getenv("STORISMA_PASSWORD")
 STORISMA = storisma.Storisma(STORISMA_EMAIL, STORISMA_PASSWORD)
-#STORISMA.login()
 
 
 def settings(request):
@@ -26,12 +25,12 @@ def settings(request):
 
 
 def create_product_with_variations(request, wordpress_product_id):
-    # Get product variations using Wordpress Api
+    # Get product variations using
     wordpress_product_variations = wp.WordpressProduct.objects.get(product_id=wordpress_product_id).variations
     if not wordpress_product_variations:
         return HttpResponseRedirect(reverse("products:products"))
 
-    # Group all variations attibutes and conwert them to storisma creation params dict:
+    # Group all variations attibutes and convert them to storisma creation params dict:
     grouped_variations_attributes = wp.group_variations_attributes_by_id(
         wordpress_product_variations
     )
@@ -77,6 +76,7 @@ def create_product_with_variations(request, wordpress_product_id):
     return HttpResponseRedirect(reverse("products:products"))
 
 
+# Populate data on demand button
 def pupulate_product_data(request, storisma_product_id):
     storisma_product = models.StorismaProduct.objects.get(product_id=storisma_product_id)
     STORISMA.populate_product_data(storisma_product)
